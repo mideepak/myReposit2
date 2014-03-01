@@ -1,0 +1,789 @@
+http://www.mediawiki.org/wiki/Gerrit/Tutorial
+
+
+
+ 
+
+
+ 
+
+
+
+Amending our Terms of Use: 
+ Please comment on a proposed amendment regarding undisclosed paid editing. 
+
+close 
+
+
+
+Gerrit/Tutorial
+
+
+
+
+
+< Gerrit
+
+Jump to: navigation, search 
+
+
+
+ 
+
+
+ Git and Gerrit lets us deploy your code faster and makes collaboration easier!
+
+Gerrit.svg Gerrit
+
+Getting started
+Tutorial
+Advanced usage
+Navigation
+Code review guide
+New repositories
+more.. » 
+v · d · e 
+
+This tutorial helps you with:
+step-by-step instructions and screenshots for getting Gerrit access
+setting up Git on your machine
+configuring Git
+installing Git-review
+submitting a patch
+understanding the MediaWiki code review process
+
+For the quick version, see Gerrit/Getting started. Gerrit/Advanced usage has additional documentation for power users. For more information check Gerrit.
+
+
+
+Contents  [hide] 
+1 What is Git?
+2 What is Gerrit?
+3 Why did Wikimedia engineering move from Subversion to Git
+4 Setting up Git 4.1 Installation 4.1.1 Mac OS X
+4.1.2 Windows
+4.1.3 Linux & UNIX
+
+4.2 Configure Git 4.2.1 Set your username and email
+
+
+5 Set Up SSH Keys in Gerrit 5.1 Generate a new SSH key
+5.2 Add your SSH key 5.2.1 Can’t view hidden files? Other ways to copy:
+
+5.3 Add ssh key to your gerrit account
+5.4 Add ssh key to use with git
+5.5 Download the Examples extension using Git
+
+6 Prepare to work with gerrit 6.1 Installing git-review
+6.2 Configuring git-review
+6.3 Setting up git-review
+
+7 How to submit a patch 7.1 Update master
+7.2 Create a branch
+7.3 Make and commit your change 7.3.1 Usual way
+
+7.4 Prepare to push your change set to Gerrit
+7.5 Push your change set to Gerrit
+7.6 Amending a change 7.6.1 git review complains about multiple commits
+7.6.2 git complains "you are in the middle of a merge -- cannot amend"
+
+
+8 How we review code 8.1 Review before merge
+8.2 Who can review? Gerrit project owners
+8.3 How to comment on, review, and merge code in Gerrit 8.3.1 Viewing and commenting on code
+8.3.2 Comparing patch sets
+8.3.3 Formally reviewing and merging or rejecting code
+
+
+9 See also
+
+
+What is Git?[edit source]
+
+Git is a distributed version control system (dvcs) written in C originally developed by Linus Torvalds and others to manage the Linux kernel. In the past couple of years, it has taken off as a very robust and well-supported code repository. “Distributed” means that there is no central copy of the repository. With Subversion, Wikimedia’s servers host the repository and users commit their changes to it. In contrast, with Git, once you’ve cloned the repository, you have a fully functioning copy of the source code, with all the branches and tagged releases at your disposal.
+
+Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency. Git is easy to learn and has a tiny footprint with lightning fast performance. It outclasses SCM tools like Subversion, CVS, Perforce, and ClearCase with features like cheap local branching, convenient staging areas, and multiple workflows.
+
+What is Gerrit?[edit source]
+
+Gerrit is a free, web-based collaborative code review tool that integrates with Git. It has been developed at Google by Shawn Pearce (co-author of Git, founder of JGit) for the development of the Android project.
+
+Starting from a set of patches for Rietveld, it became a fork and evolved into a full blown project when ACL patches wouldn't be merged into Rietveld by its author, Guido van Rossum.
+
+Originally written in Python like Rietveld, it is now written in Java (Java EE Java Servlet) with SQL since version 2.
+
+Why did Wikimedia engineering move from Subversion to Git[edit source]
+
+Three major reasons:
+1.To encourage participation: Since Git is distributed, it allows people to contribute with a much lower barrier to entry. Anyone will be able to clone the repository and make their own changes to keep track of them. And if you’ve got an account in our code review tool (Gerrit), you’ll be able to push changes for the wider community to review.
+2.To fix our technical process: Subversion has technical flaws that make life difficult for developers. Notably, the implementation of branching is not very easy to use, and makes it hard to use “feature branches”. Our community is very distributed, with many parallel efforts and needs to integrate many different feature efforts, so we’d like to use feature branches more. Git branches are very easy to work with and merge between, which should make things easier for our development community. (Several other large projects, such as Drupal and PostgreSQL, have made the same switch for similar reasons, and we’ve done our best to learn from their experiences.)
+3.To get improvements to users faster: With better branching and a more granular code review workflow that suits our needs better, plus our ongoing improvements to our automated testing infrastructure, we won’t have to wait months before deploying already-written features and bugfixes to Wikimedia sites.
+
+Setting up Git[edit source]
+
+These instructions explain how to install Git as a command-line tool. If you also want a GUI client check the list maintained by the Git project. For alternate instructions look here, or here.
+
+Installation[edit source]
+
+Mac OS X[edit source]
+
+Install one of the following:
+Homebrew package manager: brew install git – Recommended, simple updating and easy installing of other packages
+Standalone: Git for Mac
+
+Windows[edit source]
+
+Install Git + MSys (Minimal Bash for Windows) from http://msysgit.github.io/ . This gives you Git, plus a shell that allows most of the command lines in these instructions to work on Windows.
+
+Linux & UNIX[edit source]
+
+
+ 
+
+
+ Installing git on Ubuntu
+For other Linux distributions please check your vendor documentation.
+Debian/Ubuntu: sudo apt-get install git
+Fedora: yum install git
+archlinux: pacman -S git
+openSUSE: zypper install git
+Gentoo: emerge --ask --verbose dev-vcs/git
+FreeBSD: cd /usr/ports/devel/git; make install
+NetBSD: cd /usr/pkgsrc/devel/scmgit/; make install
+OpenBSD: pkg_add git
+Solaris 11 Express: pkg install developer/versioning/git
+
+Now that you have Git installed, it’s time to configure your personal info.
+
+Configure Git[edit source]
+
+Now that you have Git on your system, you’ll want to do a few things to customize your Git environment. You should have to do these things only once; they’ll stick around between upgrades. You can also change them at any time by running through the commands again.
+
+Git comes with a tool called git config that lets you get and set configuration variables that control all aspects of how Git looks and operates. To see your current configuration use the "list" (-l) option:
+git config -l
+
+
+Git config -l.png
+
+Set your username and email[edit source]
+
+Git tracks who makes each commit by checking the user’s name and email. In addition, we use this info to associate your commits with your gerrit account. To set these, enter the code below, replacing the name and email with your own. (To keep your email private you can use "<username>@gerrit.wikimedia.org", substituting your gerrit username.)
+ git config --global user.email "example@wikimedia.org"
+ git config --global user.name "example"
+
+
+Git config email and username.png
+
+Set Up SSH Keys in Gerrit[edit source]
+
+We use SSH keys to establish a secure connection between your computer and Gerrit. Setting them up is fairly easy, but does involve a number of steps. Run the following commands in a terminal. For alternate instructions look here, and then here.
+
+To make sure you generate a brand new key, you need to check if one already exists. List the file in your .ssh directory (if you have one):
+$ cd .ssh
+$ ls
+
+
+Generate a new SSH key[edit source]
+
+To generate a new SSH key, enter the code below. We want the default settings so when asked to enter a file in which to save the key, just press enter.
+$ ssh-keygen -t rsa -C "your_email@youremail.com"
+
+
+Assign a memorable passphrase and press [enter] (press the [enter] key twice if you don't want a passphrase*).
+* Why do passphrases matter?Passwords aren’t very secure, you already know this. If you use one that’s easy to remember, it’s easier to guess or brute-force (try many options until one works). If you use one that’s random it’s hard to remember, and thus you’re more inclined to write the password down. Both of these are Very Bad Things™. This is why you’re using ssh keys.But using a key without a passphrase is basically the same as writing down that random password in a file on your computer. Anyone who gains access to your drive has gained access to every system you use that key with. This is also a Very Bad Thing™. The solution is obvious: add a passphrase.But I don’t want to enter a long passphrase every time I use the key!Neither do we! Thankfully, there’s a nifty little tool called ssh-agent that can save your passphrase securely so you don’t have to re-enter it. If you’re on OSX Leopard or later your keys can be saved in the system’s keychain to make your life even easier.
+Which should give you something like this:
+Ssh-keygen -t rsa -C "your email@youremail.com".png
+
+It will create 2 files in ~/.ssh directory as follows:
+~/.ssh/id_rsa : identification (private) key
+~/.ssh/id_rsa.pub : public key
+
+
+Add your SSH key[edit source]
+
+Open your public key file, (e.g. id_rsa.pub) with a text editor (Notepad, TextEdit, or gedit will do just fine). You may need to turn on “view hidden files” to find it because the .ssh directory is hidden. It’s important you copy your SSH key exactly as it is written without adding any newlines or whitespace. Copy the full text, including the "ssh-rsa" lead and email address tail.
+
+On a linux system you can use the following:
+cat /home/<local-user>/.ssh/id_rsa.pub
+
+
+Which for local-user preilly, gives this:
+Cat id rsa.pub.png
+
+Can’t view hidden files? Other ways to copy:[edit source]
+
+OSX
+$ pbcopy < ~/.ssh/id_rsa.pub # Copies the contents of the id_rsa.pub file to your clipboard
+
+
+Windows
+ You can open Git GUI, go to Help > Show Key, and then press Copy To Clipboard to copy your public key to your clipboard.
+
+Linux
+$ sudo apt-get install xclip # Downloads and installs xclip
+$ xclip -sel clip < ~/.ssh/id_rsa.pub
+
+
+Add ssh key to your gerrit account[edit source]
+
+Create an account at wikitech.wikimedia.org if you do not yet have one.
+
+Log into the web interface for gerrit. Click on your username in the top right corner, then choose "Settings". On the left you will see SSH PUBLIC KEYS. Paste your SSH Public Key into the corresponding field. Alternately, once logged in, use these direct links to add your public key to gerrit and wikitech.
+
+Add ssh key to use with git[edit source]
+
+Start Git Bash.
+Get ssh-agent running using
+$ eval `ssh-agent`
+
+Be sure to use the accent " ` " located under the tilde " ~ ", not the single quote " ' ".Add your private key to the agent (use path to your private key file)
+$ ssh-add .ssh/id_rsa
+
+Key should be in OpenSSH format (.ppk keys can be exported to this format in PuTTyGen).Run ssh
+$ ssh <USERNAME>@gerrit.wikimedia.org -p 29418
+
+It should give a Gerrit welcome message and then abort.
+Download the Examples extension using Git[edit source]
+
+You can download MediaWiki core using Git, as well as the source code of any project repository hosted at gerrit.wikimedia.org (the Wikimedia Foundation server cluster).
+
+Let's practice downloading the Examples extension. Simply run the following on the git bash command line:
+$ git clone https://gerrit.wikimedia.org/r/p/test/mediawiki/extensions/examples.git
+
+
+Git clone.png
+
+This will copy the entire history of the "Examples" extension repository. You will have a working directory of the extension's main branch, so you can look at the code and start editing it. If you change into the new directory, you can see the .git subdirectory. That is where all the project data is.
+
+By default, Git will create a directory that has the same name as the project in the URL you give it - basically whatever is after the last slash of the URL. If you want something different, you can just put it at the end of the command, after the URL. So, in this example you will have a "examples" directory.
+
+Prepare to work with gerrit[edit source]
+
+Main article: Gerrit/git-review
+
+In order to work with gerrit, you need to add a "change id" to your commit summary (you can see these if you browse changes on gerrit, they look like Change-Id: Ibd3be19ed1a23c8638144b4a1d32f544ca1b5f97 starting with an I). Each time you amend a commit in response to gerrit feedback git gives it a new commit ID, but because this change ID stays the same gerrit will keep track of it as a new "patch set" addressing the same change.
+
+There's a git add-on called git-review that manages this and other aspects of using gerrit.
+
+Installing git-review[edit source]
+
+First, install the release version of git-review.
+
+Generally, the easiest way to get last version is to install it using the python package installer pip:
+
+
+$ sudo pip install git-review
+
+
+If that worked, skip to the next section. If you need to install pip, then:
+
+In Debian/Ubuntu, to install
+
+
+$ sudo apt-get install python-pip
+
+
+On OpenSuse, install via YaST python-setuptools, then run
+
+
+$ sudo easy_install pip
+
+
+Apt-get install python-pip.png
+
+
+$ sudo pip install git-review
+
+
+Pip install git-review.png
+
+On FreeBSD, you directly have a kept up to date devel/git-review port:
+
+
+$ cd /usr/ports/devel/git-review
+$ make install
+
+
+Note: if you don't have apt-get but have python installed, you can use this:
+
+
+$ sudo easy_install pip
+$ sudo pip install git-review
+
+
+Or, if you already have git-review installed, you can upgrade it using
+
+
+$ sudo pip install --upgrade git-review
+
+
+Configuring git-review[edit source]
+
+Git is a distributed version control system; it's possible to fetch code from one host, push your changes to another, and submit them to a third for gerrit code review. It's a lot simpler to work with one "remote" for all three. Since git's default remote name is "origin" and most guides on the web use that name, let's tell git-review to use this as well. In your home directory, edit .config/git-review/git-review.conf and add these two lines:
+
+
+[gerrit]
+defaultremote = origin
+
+
+Setting up git-review[edit source]
+
+After cloning a repository, you need to set it up for git-review. This will automatically happen the first time you try to submit a commit, but it's generally better to do it right after cloning. In your project's directory ("examples"), enter
+$ git review -s
+
+
+which should give you this:
+Git review -s.png
+
+If you see "the authenticity of host gerrit.wikimedia.org can't be established..." Don’t worry, this is supposed to happen. Type "yes".
+
+This may ask you for your git username, if it's different from the shell username you're using.
+
+How to submit a patch[edit source]
+
+For a brief overview see Gerrit/Getting started.
+
+The main avenue for submitting changes to MediaWiki code is to first join the MediaWiki development community so you can submit changes to Gerrit, our code review tool. Getting developer access is relatively easy.
+
+Clone the "mediawiki core" repository or the project repository which you are interested in. Open git bash and enter one of the following lines:
+$ git clone ssh://USERNAME@gerrit.wikimedia.org:29418/mediawiki/core.git
+
+$ git clone ssh://USERNAME@gerrit.wikimedia.org:29418/mediawiki/extensions/EXTENSION.git
+
+
+Substitute your gerrit username and the extension or project name. You can copy this git command from the top of the project's home page in gerrit.
+
+Update master[edit source]
+
+Make sure that your master branch (the branch created when you initially cloned the repository) is up to date:
+git pull origin master
+
+
+Git pull origin master.png
+
+However, note that a few repositories use different terms (for example operations/puppet has a "production" instead of a "master" branch).
+
+Create a branch[edit source]
+
+First, create a local branch for your new change. Give the branch a short but reasonably descriptive name (e.g. bug/1234, cleanup/some-thing, badtitle-error, ..).
+git checkout -b BRANCHNAME origin/master
+
+
+
+krinkle@example:~/dev/mw$ git checkout -b badtitle-error origin/master
+# Switched to a new branch 'badtitle-error'
+krinkle@example:~/dev/mw$ git branch
+* badtitle-error
+  master
+
+
+This will create a new branch (BRANCHNAME) from the latest 'master' and check it out for you. This is equivalent to doing
+git branch BRANCHNAME --track origin/master
+git checkout BRANCHNAME
+
+
+Make and commit your change[edit source]
+
+Usual way[edit source]
+
+Modify your local code in some fashion.
+vim Example/Example.body.php
+
+
+Vim Example.png
+
+Then check the changes you've made, within the file(s) and within the directory:
+git diff
+
+
+Git diff.png
+
+Without any extra arguments, a simple git diff will display in unified diff format (a patch) what code or content you've changed in your project since the last commit that are not yet staged for the next commit snapshot.
+
+Then check the changes you've made, within the file(s) and within the directory:
+git status
+
+
+Git status.png
+
+You run git status to see if anything has been modified and/or staged since your last commit so you can decide if you want to commit a new snapshot and what will be recorded in it.
+
+This will show all modified files. To prepare submitting a file, you should add your changes to the index (the staging area between your working copy and your local repository), which is done by using the git add command.
+git add Example/Example.body.php
+
+
+Git status 2.png
+
+You pass a file to git add when you want the changes you made to it to be included in your next commit.
+
+Any files you've changed that are not staged by you doing git add will be left alone - this means you can craft your commits with a bit more precision.
+
+At any time you can always review the changes already added to the staging area by running git status, and look at the diff with git diff --cached: Git diff --cached.png
+
+The git diff --cached command will show you what contents have been staged. That is, this will show you the changes that will currently go into the next commit snapshot.
+
+Once you are happy with the change list, you can add them to your local repository by using
+git commit
+
+
+Git commit vim.png
+
+Now that you have staged the content you want to snapshot with the git add command, you run git commit to actually record the snapshot.
+
+You will then be prompted with your favorite editor to add a descriptive message for this commit. This is what other people will see when you will later push that commit to another repository. If you do not manually add a Change-ID line to your commit message, it will be automatically generated and added for you.
+
+Git commit.png
+
+You can repeat this step over and over until you have a set of changes that you want to have pushed to the master branch. One of the cool things about git is that when you git commit, you are committing to your local copy. This means you can commit as often as you like without potentially screwing things up for another developer on the project, unlike in SVN where you would want to be very careful that the changes you commit would not cause things to break.
+
+Hence the workflow is something like:
+# Add change:
+$ git add <some file>
+# Verify list of files added to the staging area
+$ git status
+# Review diff of changes staged:
+$ git diff --cached
+# repeat until you are happy with your changes
+$ git commit
+<edit commit message>
+
+
+Prepare to push your change set to Gerrit[edit source]
+
+Before your changes can be merged into master, they must undergo review in Gerrit.
+
+But first, it's a good idea to synchronize your change set with any changes that may have occurred in master while you've been working. From within the branch you've been working on, execute the following command:
+git pull origin master
+git rebase master
+
+
+Git rebase master.png
+
+git pull will update the code in your local copy of the master branch. Then, git rebase will temporarily set aside the changes you've made in your branch, apply all of the changes that have happend in master to your working branch, then merge all of the changes you've made back into the branch. Doing this will help avoid future merge conflicts. Plus, it gives you an opportunity to test your changes against the latest code in master.
+
+Once you are satisfied with your change set and you've rebased against master, you are ready to push your code to Gerrit for review.
+
+Push your change set to Gerrit[edit source]
+
+If you installed git review and you ran git review -s to set it up for this repository, the command to push changes to Gerrit is very simple:
+git review -R
+
+
+Git review -R.png
+
+Upon success, you'll get a confirmation and a link to the changeset in Gerrit.
+
+New patchset: preilly; "Added get version method to extension" [test/mediawiki/extensions/examples] (master) - https://gerrit.wikimedia.org/r/9332
+
+(If you forgot to run git review -s, "remote" will complain about "missing Change-id in commit message". But it will also suggest a commit message with a Change-Id: INNNXXXNNN... line. Copy that line starting with "Change-Id", run git commit --amend, and paste the Change-Id line under your commit message in the text editor that opens up. Then repeat git review -R and it should complete.)
+
+You can view this change in the Gerrit Web UI: Chrome gerrit 9332.png
+
+If you want to see your changed files in their context then click on the (gitweb) links and the tree link (you then will see).
+
+If your commit addresses a bug in Bugzilla, please comment on that bug to note that the commit is in the merge queue, and link to its changeset in Gerrit.
+
+Amending a change[edit source]
+
+Sometimes, you might need to amend a submitted change. You can amend your own changes as well as changes submitted by someone else, as long as the change hasn't been merged yet.
+
+Rebase to bring your local branch up to date with the remote. It's best to make rebase updates a separate patch, so that your code reviewers have an easy time seeing what changes you've made. Assuming you are using Gerrit, you can do this by clicking the "Rebase Change" button when viewing your patch in Gerrit's web interface.
+
+If you have git-review, checkout the change like this:
+git review -d <change number>
+
+
+Note, if you already have the change in a branch on your local repository, you can just check it out instead:
+git checkout <branch name>
+
+
+For example:
+git review -d 9332
+
+
+Git review -d 9332.png
+
+Or, if you already have the branch,
+git checkout review/preilly/2012/bug12345
+
+
+Should accomplish the same thing.
+
+Next, make some changes.
+vim Example/Example.body.php
+
+
+Vim example.body file.png
+
+git add the files as needed, then commit the change (ensuring you are amending the commit):
+git add Example/Example.body.php
+git commit --amend
+
+
+Vim git commit amend.png
+
+Git commit amend.png
+
+NOTE: DO NOT use the -m flag to specify a commit summary: that will override the previous summary and regenerate the Change-Id. Instead, use your text editor to change the commit summary if needed, and keep the Change-Id line intact.
+
+Push the change
+git review -R
+
+The -R is important here. It tells git-review to not rebase your change against master, which clutters diffs between patch set 1 and 2.
+Git review -R 2.png
+
+New patchset: preilly; "Added get version method to extension" [test/mediawiki/extensions/examples] (master) - https://gerrit.wikimedia.org/r/9332 Chrome gerrit 9332 2.png
+
+git review complains about multiple commits[edit source]
+
+If git review asks you if you really want to submit multiple commits, and lists a bunch of unrelated commits from different branches, try either of these:
+git fetch --all
+
+git remote update
+
+
+Both commands do exactly the same thing, they fetch objects from all remote repositories set. So just pick the command you remember easily and forget about the other one. Git remote update.png
+
+git complains "you are in the middle of a merge -- cannot amend"[edit source]
+
+When after rebasing and merging your
+git commit --amend
+
+
+results in
+message: fatal: You are in the middle of a merge -- cannot amend.
+
+
+apply these steps and reapply your changes
+git stash
+git reset --hard
+git checkout master
+git review -d <change number>
+git stash pop
+git commit -a --amend
+
+
+If, aIfter `git review` jenkins-bot emails This change was unable to be automatically merged with the current state of the repository. Please rebase your change and upload a new patchset. This might mean that server master branch now has merge conflicts with your patch. Check advanced gerrit usage to see how to fix them
+
+How we review code[edit source]
+
+Code review is an essential part of our contribution workflow. The principle is basic: any patch must be reviewed by others before being merged.
+
+This means that your code will need reviewers. Check our advice for getting reviews.
+
+Review before merge[edit source]
+
+It's important to us to have a review-before-merge workflow for MediaWiki core and also for any extension we deploy. We will also offer that option to any extension author who wants it for their extension. The one exception is localisation and internationalisation commits, which will be able to be pushed without review.
+
+Who can review? Gerrit project owners[edit source]
+
+Who has the ability to do code review?
+
+We use gerrit.wikimedia.org to manage code review. Anyone can ask for a Gerrit account (Get an account!). Within Gerrit, anyone can comment on commits and signal their criticisms and approvals. Anyone can give a nonbinding "+1" to any commit. However, for any given repository ("Gerrit project"), only a small group of people will have the ability to approve code within Gerrit and merge it into the repository. (Within gerrit, this superapproval is a "+2" even though that's a misleading name, because two +1 approvals DO NOT add up to a +2.) These people are "Gerrit project owners". To learn about becoming a Gerrit project owner, see Gerrit/Project ownership.
+
+Even within a Gerrit project, we can also specify particular branches that only specific people can pull into.
+
+How to comment on, review, and merge code in Gerrit[edit source]
+
+
+ 
+
+
+ A sample changeset, with annotations
+
+ 
+
+
+ Side-by-side diff
+
+ 
+
+
+ Review screen
+Anyone can comment on code in Gerrit.
+
+Viewing and commenting on code[edit source]
+Make sure you have a https://gerrit.wikimedia.org login (Get an account!). If you don't know, try logging in at https://wikitech.wikimedia.org; the username and password should be the same. If you can't, ask in #mediawikiconnect for someone to help.
+Log in to Gerrit. If you know the changeset you want to look at (URL will look like https://gerrit.wikimedia.org/r/#change,8939 ), go to that. Otherwise, use the search box and try searching. There is no fulltext search in Gerrit, but you can search by author ("Owner"), Gerrit project, branch, changesets you've starred, etc. The Gerrit search documentation covers all of the different search operators you can use.
+The changeset has a few important fields, links and buttons:
+Reviewers. 'jenkins-bot' is the autoreviewer that auto-verifies anything that passes the Jenkins tests. It will report a red or green mark depending on whether the build passes. A changeset needs to be approved by Jenkins before anyone can merge it.
+Add reviewer (manually ping someone to request their review. It'll show up in their Gerrit stream)Side-by-side diff button:
+Opens the diff. You can double-click on a line and comment on that line, then save a draft comment! Then, click "Up to change" to go back to the changeset.Abandon Change button (you'll see this if you wrote this diff. This action removes the diff from the merge queue, but leaves it in Gerrit for archival purposes)
+Review button:
+The purpose of this page is to signal your thoughts on the commit. You can leave an overall comment or view inline comments from the diff that are still in draft form and awaiting publication. If upon code review, you approve, use "+1" under Code Review; otherwise, use "-1" to disapprove. These numbers are nonbinding, won't cause merges or rejections, and have no formal effect on the code review.
+
+Comparing patch sets[edit source]
+
+Every time you amend your commit and submit it for review, a new patch set is created. You can compare the different patch sets like this:
+Select the older patch set in the "Old Version History" list.
+Expand the newer patch set details by clicking the arrow near it.
+Click Side-by-Side. Note that in Gerrit 2.3 this only works if you open the diff in the same tab, so don't open it in a new tab.
+
+Formally reviewing and merging or rejecting code[edit source]
+
+If you are one of the Gerrit project owners, you'll also see:
+
+
+ 
+
+
+ A Gerrit review screen with approval and veto optionsAbandon Change button
+on the Review page, additional Code Review options to +2 (approve) or -2 (veto) a diff, and a Publish And Submit button (publish your comment and merge diff into the branch, in 1 step)
+Submit Patch Set 1 button (merge -- only useful if you or someone else has already given a +2 approval to the diff, but not merged it)
+
+And once you've merged something into the example Gerrit project you'll see it in https://gerrit.wikimedia.org/r/gitweb?p=test/mediawiki/extensions/examples.git;a=summary .
+
+If you merge a commit that references a Bugzilla bug, please go to that bug and mark it RESOLVED: FIXED and reference the merge ID.
+
+See also[edit source]
+
+Also useful are these pages:
+Git and gerrit in Wikimedia labs
+An intro-to-git "training mission"
+An introduction to git-svn for Subversion/SVK users by Sam Vilain
+GitMagic A git guide with translations
+A git branching model
+Git: the simple guide
+Git Community Book will take you gently into Git internals. (It is hard to "get" git until knowing something about how it works internally. After this, everything become simple, just hidden without convoluted and anti-productive user interface.)
+How we're going to use Git slides by Brion Vibber, as presented autumn 2011
+Audio from Git presentation by Brion Vibber, autumn 2011
+Notes from Brion Vibber's presentation
+Git's website with documentation
+Pro Git book
+MediaWiki Git Guide (MGG) - selection of relevant Git pages in the MW Virtual Library
+A very useful Git guide
+Also useful (if you subtract away GitHub stuff)
+https://gerrit.wikimedia.org/r/#q,status:open,n,z - wikimrdia bug list
+Download from Git
+labsconsole:Help:Access
+Gerrit
+Gerrit/git-review
+Gerrit/Getting started
+  
+
+
+
+Categories: Tutorials
+Git
+Gerrit
+New contributors
+
+
+
+Navigation menu
+
+
+
+
+English
+Create account
+Log in
+
+
+
+
+Page
+
+
+Discussion
+
+
+
+
+
+
+
+ 
+
+
+
+
+Read
+
+
+
+
+
+Edit source
+
+
+View history
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+Main page
+Get MediaWiki
+Get extensions
+Communication
+Tech blog
+
+
+Support
+
+User help
+FAQ
+Technical manual
+Support desk
+
+
+Development
+
+
+
+
+
+
+
+
+MediaWiki.org
+
+
+
+
+
+
+
+Print/export
+
+
+
+
+
+
+Tools
+
+
+
+
+
+
+
+
+
+This page was last modified on 1 March 2014, at 02:26.
+Text is available under the Creative Commons Attribution/Share-Alike License; additional terms may apply. See Terms of Use for details.
+Privacy policy
+About MediaWiki.org
+Disclaimers
+Developers
+Mobile view
+Wikimedia Foundation 
+Powered by MediaWiki 
+
+    
+
